@@ -7,9 +7,10 @@ import re
 import pandas as pd
 from quick_clean import quick_clean
 import spacy
-import en_core_web_lg # large model performs better
-nlp = en_core_web_lg.load()
-# import en_core_web_sm
+import en_core_web_lg # The large model performs better. You can download with 'python -m spacy download en_core_web_lg'
+# see https://spacy.io/usage/models for more.
+nlp = en_core_web_lg.load() # Can take around 10 seconds
+# import en_core_web_sm # Small model performs not quite as well.
 # nlp = en_core_web_sm.load()
 import logging
 logger = logging.getLogger()
