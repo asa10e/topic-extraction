@@ -24,7 +24,7 @@ def get_json(content):
     return doc
 
 # We'll remove these if they come up. We can add to this list as we come across more topics we aren't interested in.
-stupid_topics = ['Economy','Finance','Money','Banking','Banks','Marketing','Politics',
+stupid_topics = ['Economy','Finance','Money','Banking','Banks','Marketing','Politics','Macroeconomics',
                     'Bank','Business','Economics', # 'Central bank',
                     'Financial economics','PR Newswire','Breakingviews','Modern history',
                     '21st century in the United States',#'Chinese people',
@@ -52,7 +52,7 @@ def magic(text):
 
     df = df[~df.tag.isin(stupid_topics)] # remove stupid topics
 
-    # if both 'Jamal Khashoggi' and 'Khashoggi' are tags, we only want the longer of the two.
+    # If both 'Jamal Khashoggi' and 'Khashoggi' are tags, we only want the longer of the two.
     # Similarly, we care about 'Saudi Arabia–United States relations' more than 'Saudi Arabia'.
     tag_lis = df.tag.values.tolist()
     tag_string = ' '.join(tag_lis)
@@ -60,6 +60,9 @@ def magic(text):
     df = df[~df.tag.isin(new_tag_lis)] # Remove those shorter tags
 
     df = df.sort_values(by=['score'], ascending = False).reset_index(drop=True)
+    df = df.head(10) # Only take the top 10
+
+    df = df.drop(['score'], axis = 1) # Drop the score column for now. Not really that useful
 
     return df
 
