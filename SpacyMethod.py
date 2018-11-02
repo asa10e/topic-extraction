@@ -7,10 +7,9 @@ import re
 import pandas as pd
 from quick_clean import quick_clean
 import spacy
-import en_core_web_lg # The large model performs better. You can download with 'python -m spacy download en_core_web_lg'
-# see https://spacy.io/usage/models for more.
-nlp = en_core_web_lg.load() # Can take around 10 seconds
-# import en_core_web_sm # Small model performs not quite as well.
+import en_core_web_lg # large model performs better than small model
+nlp = en_core_web_lg.load()
+# import en_core_web_sm
 # nlp = en_core_web_sm.load()
 import logging
 logger = logging.getLogger()
@@ -18,12 +17,12 @@ import country_converter as country_converter
 
 def coco(name):
     '''
-    'U.S.' -> 'United States', etc.
+    'U.S.','United States of America' -> 'United States', etc.
     '''
-
+    # Remove a leading "the" from names. Note that even for non-countries this is desirable for readability.
     name = re.sub(r'^(the\s)', '', name, flags=re.IGNORECASE)
 
-    # Custom replacements
+    # Custom replacements that country_converter can't seem to handle
     custom_dic = {'US': 'United States','UK':'United Kingdom','EU':'European Union',
                     'E.U.':'European Union'}
     if name in custom_dic:
@@ -35,12 +34,20 @@ def coco(name):
 
     return country
 
+# A list of topics that, if identified, should not be shown to the user.
+# TODO: Expand after extensive testing
 stupid_topics = ['New York Times','Fox Business Network','CNN',
                 'North','South','East','West']
 
 def sp(text):
+    '''
+    Outputs a dataframe of length <= 10 of tag, type, and score.
+    The tag is a specific Person, Location, Event, or Other mentioned in the text.
+    The type is literally either Person, Location, Event, or Other.
+    The score is its normalized number of appearances (including mentions).
+    '''
 
-    text = quick_clean(text)
+    text = quick_clean(text) # Clean the text up
     doc = nlp(text)
 
     df = pd.DataFrame(columns = ['tag','type','score']) # Initialize df
@@ -51,36 +58,33 @@ def sp(text):
                     'EVENT':'Event','WORK_OF_ART':'Other',
                     'LAW':'Other','PRODUCT':'Other',
                     'FAC':'Other'}
-    good_labels = readable_types.keys()
+    good_labels = readable_types.keys() # 'LOC','PERSON', etc.
 
-    df['tag'] = [w.text for w in doc.ents if w.label_ in good_labels if not w.text.isspace()] # use isspace to get rid of crap like '  ' as an entity
-
+    # Create each column that will comprise the final dataframe
+    # Use isspace() to get rid of repeated spaces like '  ' as an entity
+    df['tag'] = [w.text for w in doc.ents if w.label_ in good_labels if not w.text.isspace()]
     df['type'] = [readable_types[w.label_] for w in doc.ents if w.label_ in good_labels if not w.text.isspace()]
-
     df['score'] = [df['tag'].values.tolist().count(e) for e in df['tag'].values.tolist()]
 
-    # Clean up
     df = df.drop_duplicates('tag') # Remove duplicates
     df = df.sort_values(by=['score'], ascending = False) # Sort by score
 
+    df['tag'] = df.tag.apply(coco) # Standardize country names. Non-country names will not be affected
 
-    df['tag'] = df.tag.apply(coco) # Standardize country names
+    df = df[~df.tag.isin(stupid_topics)] # Remove stupid topics
 
-    df = df[~df.tag.isin(stupid_topics)] # remove stupid topics
-
-    # if both 'Jamal Khashoggi' and 'Khashoggi' are tags, we only want the longer of the two.
+    # If both 'Jamal Khashoggi' and 'Khashoggi' are tags, we only want the longer of the two.
     # Similarly, we care about 'Saudi Arabia–United States relations' more than 'Saudi Arabia'.
     tag_lis = df.tag.values.tolist()
-    tag_string = ' '.join(tag_lis)
-    new_tag_lis = [t for t in tag_lis if tag_string.count(t)>1]
+    tag_string = ' '.join(tag_lis) # Combined string of all tags
+    new_tag_lis = [t for t in tag_lis if tag_string.count(t)>1] # Only the tags that appear more than once
     df = df[~df.tag.isin(new_tag_lis)] # Remove those shorter tags
 
     df['score'] = df.score.apply(lambda x: round(x/max(df.score), 2)) # Normalize score
 
+    df = df.drop_duplicates('tag').reset_index(drop=True) # Drop duplicated rows, if any
 
-    df = df.drop_duplicates('tag').reset_index(drop=True)
-
-    df = df.head(10)
+    df = df.head(10) # Take only the top 10 rows
     return df
 
 
