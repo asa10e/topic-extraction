@@ -39,7 +39,7 @@ def coco(name):
 stupid_topics = ['New York Times','Fox Business Network','CNN',
                 'North','South','East','West']
 
-def sp(text):
+def sp_text(text):
     '''
     Outputs a dataframe of length <= 10 of tag, type, and score.
     The tag is a specific Person, Location, Event, or Other mentioned in the text.
@@ -86,6 +86,17 @@ def sp(text):
 
     df = df.head(10) # Take only the top 10 rows
     return df
+
+def sp(text, title=''):
+    """
+    Runs sp_text() on both the text and title, but title is added twice to weight its importance.
+    """
+    if len(title)>0:
+        text += ('. '+title)*2
+
+    out_df = sp_text(text)
+
+    return out_df
 
 
 if __name__ == '__main__':
