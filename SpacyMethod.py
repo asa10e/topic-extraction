@@ -46,13 +46,10 @@ very_important_events = ['FOMC','Federal Open Market Committee',
                          'Trade War','Trade Tension','Protectionism',
                          'Brexit',
                          'Monetary Policy']
-# Some standardizations
-replacements = {'U.S. Federal Reserve':'Fed', 'Federal Reserve':'Fed',
-                'Federal Open Market Committee':'FOMC',
-                'Trade Tension':'Trade War','Protectionism':'Trade War',
-                'Trump':'Donald Trump', 'President Trump':'Donald Trump','President Donald Trump':'Donald Trump',
-                'Prime Minister May':'Theresa May','PM May':'Theresa May','Prime Minister Theresa May':'Theresa May',
-                'Xi':'Xi Jinping'}
+# Read in standardizations and store as a dictionary
+reps = pd.read_csv('topic_name_mappings.csv')
+replacements = dict(zip(reps.Name, reps.Standard))
+
 
 def sp_text(text):
     """
