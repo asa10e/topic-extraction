@@ -40,18 +40,19 @@ def coco(name):
 # TODO: Expand after extensive testing
 stupid_topics = ['New York Times','Fox Business Network','CNN',
                 'North','South','East','West']
-
 # If these terms appear in the text, we will definitely include them as important topics
 very_important_events = ['FOMC','Federal Open Market Committee',
                          'Jackson Hole',
                          'Trade War','Trade Tension','Protectionism',
                          'Brexit',
                          'Monetary Policy']
-
 # Some standardizations
 replacements = {'U.S. Federal Reserve':'Fed', 'Federal Reserve':'Fed',
                 'Federal Open Market Committee':'FOMC',
-                'Trade Tension':'Trade War','Protectionism':'Trade War'}
+                'Trade Tension':'Trade War','Protectionism':'Trade War',
+                'Trump':'Donald Trump', 'President Trump':'Donald Trump','President Donald Trump':'Donald Trump',
+                'Prime Minister May':'Theresa May','PM May':'Theresa May','Prime Minister Theresa May':'Theresa May',
+                'Xi':'Xi Jinping'}
 
 def sp_text(text):
     """
