@@ -3,6 +3,7 @@ def quick_clean(text):
 
     text = re.sub(r'\s+', ' ', text) # Get rid of extra whitespace and newlines
     text = re.sub(r'^(.*\(Reuters\))','',text) # Just get rid of everything before the (Reuters)
+    text = re.sub(r'^(.*\(Bloomberg\))','',text) # Just get rid of everything before the (Bloomberg)
 
     text = text.replace('For best results when printing this announcement, please click on link below:', ' ')
 
