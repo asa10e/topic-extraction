@@ -112,7 +112,7 @@ def sp_text(text):
     # new_tag_lis = [t for t in tag_lis if tag_string.count(' '+t+' ')>1] # Only the tags that appear more than once
     # df = df[~df.tag.isin(new_tag_lis)] # Remove those shorter tags
 
-    df['score'] = df.score.apply(lambda x: round(x/max(df.score), 2)) # Normalize score
+    # df['score'] = df.score.apply(lambda x: round(x/max(df.score), 2)) # Normalize score
 
     df = df.drop_duplicates('tag').reset_index(drop=True) # Drop duplicated rows, if any
 
