@@ -9,8 +9,6 @@ from quick_clean import quick_clean
 import spacy
 import en_core_web_lg # large model performs better than small model
 nlp = en_core_web_lg.load()
-# import en_core_web_sm
-# nlp = en_core_web_sm.load()
 import logging
 logger = logging.getLogger()
 import country_converter as country_converter
@@ -51,7 +49,6 @@ very_important_events = ['FOMC','Federal Open Market Committee',
 # Read in standardizations and store as a dictionary
 reps = pd.read_csv('topic_name_mappings.csv')
 replacements = dict(zip(reps.Name, reps.Standard))
-
 
 def sp_text(text):
     """
@@ -102,9 +99,6 @@ def sp_text(text):
     for r in replacements.keys():
         df = df.replace(r, replacements[r])
 
-    df = df.drop_duplicates('tag') # Remove duplicates
-    df = df.sort_values(by=['score'], ascending = False) # Sort by score
-
     # If both 'Jamal Khashoggi' and 'Khashoggi' are tags, we only want the longer of the two.
     # Similarly, we care about 'Saudi Arabia–United States relations' more than 'Saudi Arabia'.
     # tag_lis = df.tag.values.tolist()
@@ -112,9 +106,8 @@ def sp_text(text):
     # new_tag_lis = [t for t in tag_lis if tag_string.count(' '+t+' ')>1] # Only the tags that appear more than once
     # df = df[~df.tag.isin(new_tag_lis)] # Remove those shorter tags
 
-    # df['score'] = df.score.apply(lambda x: round(x/max(df.score), 2)) # Normalize score
-
-    df = df.drop_duplicates('tag').reset_index(drop=True) # Drop duplicated rows, if any
+    df = df.sort_values(by=['score'], ascending = False) # Sort by score
+    df = df.drop_duplicates('tag').reset_index(drop=True) # Drop duplicated tags, if any
 
     # Known country names should have type 'Location' regardless of what spaCy says
     locs_in_df = [t for t in df.tag if t in location_names]
@@ -122,7 +115,13 @@ def sp_text(text):
         idx = df.loc[df['tag']== c].index[0] # We know there's only one since we dropped duplicates
         df.at[idx,'type'] = 'Location' # Set type to Location
 
-    # df = df.head(10) # Take only the top 10 rows
+    # Drop any tag that contains a number
+    bad_tags = []
+    for tag in df.tag.values.tolist():
+        if bool(re.match(r'.*\d.*',tag)): # If a number is in the tag
+            bad_tags.append(tag) # Add to bad_tags
+    df = df[~df['tag'].isin(bad_tags)] # Drop anything in bad_tags
+
     return df
 
 def sp(text, title=''):
@@ -135,7 +134,6 @@ def sp(text, title=''):
     out_df = sp_text(text)
 
     return out_df
-
 
 if __name__ == '__main__':
     sp()
