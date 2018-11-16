@@ -57,7 +57,6 @@ def sp_text(text):
     The type is literally either Person, Location, Event, or Other.
     The score is its normalized number of appearances (including mentions).
     """
-
     text = quick_clean(text) # Clean the text up
     doc = nlp(text)
 
@@ -117,10 +116,25 @@ def sp_text(text):
 
     # Drop any tag that contains a number
     bad_tags = []
-    for tag in df.tag.values.tolist():
-        if bool(re.match(r'.*\d.*',tag)): # If a number is in the tag
-            bad_tags.append(tag) # Add to bad_tags
+    for t in df.tag.values.tolist():
+        if bool(re.match(r'.*\d.*',t)): # If a number is in the tag
+            bad_tags.append(t) # Add to bad_tags
     df = df[~df['tag'].isin(bad_tags)] # Drop anything in bad_tags
+
+    # If a tag is in all caps and has a non-all caps duplicate, drop the all caps tag
+    bad_tags = []
+    all_tags = df.tag.values.tolist()
+    all_tags_lowered = [t.lower() for t in all_tags]
+    for t in all_tags:
+        if (t.upper() in all_tags) & (all_tags_lowered.count(t.lower()) > 1):
+            bad_tags.append(t.upper())
+    df = df[~df['tag'].isin(bad_tags)] # Drop anything in bad_tags
+
+    df = df.reset_index(drop=True) # Reset index again
+    # Display capitalized tags nicer
+    cap_cleaner = lambda t: t.title() if ((t == t.upper()) & (len(t.split())>1)) else t
+    for i in range(len(df)):
+        df.loc[i,'tag'] = cap_cleaner(df.loc[i,'tag'])
 
     return df
 
