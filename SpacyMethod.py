@@ -27,6 +27,11 @@ def coco(name):
     country = country_converter.CountryConverter().convert(name, to='name_short', not_found=None)
     logger.disabled = False
 
+    # If multiple countries are identified, a list of them is returned
+    # we'll just take the first country identified in this case
+    if type(country) == list:
+        country = country[0]
+
     return country
 
 location_names = list(pd.read_csv('location_names.csv', header = None).iloc[:,0])
