@@ -86,7 +86,10 @@ def sp_text(text):
     df = df[~df.tag.map(lambda x: any([top in x for top in stupid_topics]))]
 
     # Push to the top of df very_important_events, if they are in the text
-    top_score = max(df.score)
+    try:
+        top_score = max(df.score)
+    except:
+        top_score = 1
     for e in very_important_events:
         if e.lower() in text.lower():
             new_row = [e, 'Event', top_score]
