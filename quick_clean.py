@@ -5,6 +5,8 @@ def quick_clean(text):
     text = re.sub(r'^(.*\(Reuters\))','',text) # Just get rid of everything before the (Reuters)
     text = re.sub(r'^(.*\(Bloomberg\))','',text) # Just get rid of everything before the (Bloomberg)
     text = text.replace('For best results when printing this announcement, please click on link below:', ' ')
+    text = text.replace('SIGN UP FOR BREAKINGVIEWS EMAIL ALERTS', ' ')
+    text = text.replace('CONTEXT NEWS', ' ')
 
     # These subs get rid of the reporter and editor names at the end of Bloomberg articles
     text = re.sub(r'(To contact the reporters on this story:.*)','',text, flags=re.DOTALL)
