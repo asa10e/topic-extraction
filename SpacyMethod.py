@@ -37,15 +37,15 @@ def coco(name):
 location_names = list(pd.read_csv('location_names.csv', header = None).iloc[:,0])
 
 # A list of topics that, if identified, should not be shown to the user.
-# TODO: Expand after extensive testing
-stupid_topics = ['New York Times','Fox Business Network','CNN','Business Day',
-                'North','South','East','West']
+stupid_topics = ['New York Times','Fox Business Network','CNN','Wall Street Journal','Sky News',
+                'Business Day','Twitter','S P','SIGN','BREAKINGVIEWS','Group']
 # If these terms appear in the text, we will definitely include them as important topics
 very_important_events = ['FOMC','Federal Open Market Committee',
                          'Jackson Hole',
                          'Trade War','Trade Tension','Protectionism',
                          'Brexit',
-                         'Monetary Policy']
+                         'Monetary Policy',
+                         'Belt and Road']
 # Read in standardizations and store as a dictionary
 reps = pd.read_csv('topic_name_mappings.csv')
 replacements = dict(zip(reps.Name, reps.Standard))
@@ -80,7 +80,10 @@ def sp_text(text):
     # Non-country names will not be affected other than a little cleaning (e.g. removing '^the')
     df['tag'] = df.tag.apply(coco)
 
-    df = df[~df.tag.isin(stupid_topics)] # Remove stupid topics
+    # First remove any tag that is equal to one of four trouble words
+    # Then remove any tag that contains an element in stupid_topics
+    df = df[~df.tag.isin(['North','South','East','West'])]
+    df = df[~df.tag.map(lambda x: any([top in x for top in stupid_topics]))]
 
     # Push to the top of df very_important_events, if they are in the text
     top_score = max(df.score)
@@ -96,7 +99,10 @@ def sp_text(text):
 
     # Some custom replacements
     for r in replacements.keys():
-        df = df.replace(r, replacements[r])
+        df['tag'] = df.tag.apply(lambda x: replacements[r] if r in x else x)
+        # df = df.replace(r, replacements[r])
+
+    df = df.drop_duplicates('tag').reset_index(drop=True) # Drop duplicated tags, if any
 
     # If both 'Jamal Khashoggi' and 'Khashoggi' are tags, we only want the longer of the two.
     # Similarly, we care about 'Saudi Arabia–United States relations' more than 'Saudi Arabia'.
@@ -130,7 +136,10 @@ def sp_text(text):
             bad_tags.append(t.upper())
     df = df[~df['tag'].isin(bad_tags)] # Drop anything in bad_tags
 
-    df = df.reset_index(drop=True) # Reset index again
+    # Remove punctuation from tags, and strip leading and trailing whitespace
+    df['tag'] = df['tag'].apply(lambda x: (re.sub(r'[^a-zA-Z ]', '', x)).strip())
+
+    df = df.reset_index(drop=True) # Reset index a final time
     # Display capitalized tags nicer
     cap_cleaner = lambda t: t.title() if ((t == t.upper()) & (len(t.split())>1)) else t
     for i in range(len(df)):
