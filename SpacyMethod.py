@@ -2,7 +2,7 @@ import re
 import pandas as pd
 from quick_clean import quick_clean
 import spacy
-import en_core_web_lg # large model performs better than small model
+import en_core_web_lg
 nlp = en_core_web_lg.load()
 import logging
 logger = logging.getLogger()
@@ -75,6 +75,9 @@ def sp_text(text):
     df['tag'] = [w.text for w in doc.ents if w.label_ in good_labels if not w.text.isspace()]
     df['type'] = [readable_types[w.label_] for w in doc.ents if w.label_ in good_labels if not w.text.isspace()]
     df['score'] = [df['tag'].values.tolist().count(e) for e in df['tag'].values.tolist()]
+
+    if df.empty: # If no tags were identified, return the empty dataframe
+        return df
 
     # Standardize country names
     # Non-country names will not be affected other than a little cleaning (e.g. removing '^the')
